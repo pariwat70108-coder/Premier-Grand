@@ -1,0 +1,1203 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Premier Grand - ระบบบริหารจัดการการเงินนิติบุคคลหมู่บ้านพรีเมียร์แกรนด์</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js & DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'sans-serif'],
+                        display: ['Prompt', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        navy: { 800: '#1e293b', 900: '#0f172a', 950: '#090e1a' },
+                        gold: { 300: '#f3d98b', 400: '#e5c158', 500: '#d4af37', 600: '#b59224' }
+                    },
+                    boxShadow: {
+                        luxury: '0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 10px -3px rgba(15, 23, 42, 0.04)',
+                        goldGlow: '0 4px 20px -2px rgba(212, 175, 55, 0.35)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f1f5f9; color: #0f172a; overflow-x: hidden; }
+        .card-header-navy { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 2px solid #d4af37; }
+        .sidebar-gradient { background: linear-gradient(180deg, #090e1a 0%, #0f172a 55%, #172036 100%); }
+        .gold-text-gradient { background: linear-gradient(135deg, #f3d98b 0%, #d4af37 50%, #f3d98b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-item.active { background: linear-gradient(90deg, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.05) 100%); border-left: 4px solid #d4af37; color: #f3d98b; }
+        .nav-item:not(.active) { border-left: 4px solid transparent; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="antialiased selection:bg-gold-500 selection:text-navy-950">
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileOverlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-navy-950/60 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+
+    <div class="min-h-screen flex flex-col lg:flex-row">
+
+        <!-- ===================================================================== -->
+        <!-- LEFT SIDEBAR NAVIGATION                                               -->
+        <!-- ===================================================================== -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-72 sidebar-gradient text-white flex flex-col justify-between transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl shrink-0">
+            <div>
+                <div class="px-6 py-6 border-b border-slate-800/90 flex items-center justify-between">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-navy-950 shadow-goldGlow shrink-0">
+                            <i class="fa-solid fa-crown text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-display font-bold text-lg tracking-wider gold-text-gradient leading-tight">PREMIER GRAND</div>
+                            <div class="text-[11px] text-slate-400 tracking-wide">นิติบุคคลหมู่บ้านพรีเมียร์แกรนด์</div>
+                        </div>
+                    </div>
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1.5">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="px-3 py-5">
+                    <div class="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">เมนูหลัก (Menu)</div>
+                    <nav class="space-y-1.5" id="mainNav">
+                        <button onclick="switchTab('dashboard')" data-tab="dashboard" class="nav-item active w-full flex items-center gap-3.5 px-4 py-3 rounded-r-xl text-sm font-display font-medium transition-all duration-200 hover:bg-white/5 text-left">
+                            <i class="fa-solid fa-chart-line w-5 text-center text-gold-400"></i>
+                            <span>ภาพรวม Dashboard</span>
+                        </button>
+                        <button onclick="switchTab('income')" data-tab="income" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-r-xl text-sm font-display font-medium text-slate-300 transition-all duration-200 hover:bg-white/5 hover:text-white text-left">
+                            <i class="fa-solid fa-users w-5 text-center text-gold-400"></i>
+                            <span>ค่าส่วนกลาง (รายรับ)</span>
+                        </button>
+                        <button onclick="switchTab('expenses')" data-tab="expenses" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-r-xl text-sm font-display font-medium text-slate-300 transition-all duration-200 hover:bg-white/5 hover:text-white text-left">
+                            <i class="fa-solid fa-file-invoice-dollar w-5 text-center text-gold-400"></i>
+                            <span>รายจ่ายทั้งหมด</span>
+                        </button>
+                        <button onclick="switchTab('ledger')" data-tab="ledger" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-r-xl text-sm font-display font-medium text-slate-300 transition-all duration-200 hover:bg-white/5 hover:text-white text-left">
+                            <i class="fa-solid fa-list-check w-5 text-center text-gold-400"></i>
+                            <span>รายการเดินบัญชี</span>
+                        </button>
+                        <button onclick="switchTab('annual')" data-tab="annual" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-r-xl text-sm font-display font-medium text-slate-300 transition-all duration-200 hover:bg-white/5 hover:text-white text-left">
+                            <i class="fa-solid fa-sack-dollar w-5 text-center text-gold-400"></i>
+                            <span>สรุปยอดประจำปี 2569</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="p-4 m-3 rounded-2xl bg-gradient-to-b from-slate-800/80 to-navy-950 border border-gold-500/30 relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="px-2 py-0.5 rounded-md bg-gold-500/20 text-gold-300 text-[10px] font-semibold border border-gold-500/30">โครงการพรีเมียร์แกรนด์</span>
+                        <i class="fa-solid fa-building-columns text-gold-400 text-sm"></i>
+                    </div>
+                    <svg viewBox="0 0 240 105" class="w-full h-24 rounded-xl bg-gradient-to-b from-sky-900/50 to-slate-900 border border-slate-700/60 my-1.5">
+                        <rect x="0" y="88" width="240" height="17" fill="#1e293b"/>
+                        <rect x="28" y="48" width="54" height="40" fill="#cbd5e1" rx="2"/>
+                        <polygon points="24,48 55,28 86,48" fill="#334155"/>
+                        <rect x="78" y="34" width="84" height="54" fill="#cbd5e1" rx="2"/>
+                        <polygon points="72,34 120,10 168,34" fill="#334155" stroke="#d4af37" stroke-width="1"/>
+                        <rect x="106" y="56" width="28" height="32" rx="14" fill="#0f172a" stroke="#d4af37" stroke-width="1.5"/>
+                    </svg>
+                    <p class="text-[11px] text-slate-300 mt-1">ระบบรายงานการเงินโปร่งใส ตรวจสอบได้ทุกยอด</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===================================================================== -->
+        <!-- MAIN CONTENT                                                          -->
+        <!-- ===================================================================== -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <!-- Header Bar with Manual Save Button & Month Selector -->
+            <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-4 sticky top-0 z-20 shadow-2xs">
+                <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleMobileSidebar()" class="lg:hidden p-2.5 rounded-xl bg-navy-900 text-gold-400 hover:bg-navy-800 transition">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <h1 id="pageTitle" class="font-display font-bold text-lg sm:text-2xl text-navy-900">
+                                    สรุปรายรับ - รายจ่ายประจำเดือนตุลาคม 2569
+                                </h1>
+                                <span id="saveStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> บันทึกแล้ว
+                                </span>
+                            </div>
+                            <p id="pageSubtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5">
+                                รายงานสถานะทางการเงิน ค่าส่วนกลาง และรายการเดินบัญชี นิติบุคคลหมู่บ้านพรีเมียร์แกรนด์
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Manual Save Button & Month Selector -->
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <!-- Manual Save Button -->
+                        <button id="manualSaveBtn" onclick="manualSaveData()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>บันทึกข้อมูล</span>
+                        </button>
+
+                        <!-- Period Selector -->
+                        <div class="flex items-center gap-2.5 bg-navy-900 text-white px-4 py-2 rounded-xl border border-gold-500/40 shadow-sm">
+                            <i class="fa-regular fa-calendar-check text-gold-400"></i>
+                            <div class="text-xs sm:text-sm font-display font-medium flex items-center gap-2">
+                                <span class="hidden sm:inline">ประจำเดือน:</span>
+                                <select id="globalMonthSelect" onchange="changeActiveMonth(this.value)" class="bg-navy-800 text-gold-300 font-semibold px-2 py-1 rounded-lg border border-slate-700 focus:outline-none focus:border-gold-400 cursor-pointer text-xs">
+                                    <option value="มกราคม 2569">มกราคม 2569</option>
+                                    <option value="กุมภาพันธ์ 2569">กุมภาพันธ์ 2569</option>
+                                    <option value="มีนาคม 2569">มีนาคม 2569</option>
+                                    <option value="เมษายน 2569">เมษายน 2569</option>
+                                    <option value="พฤษภาคม 2569">พฤษภาคม 2569</option>
+                                    <option value="มิถุนายน 2569">มิถุนายน 2569</option>
+                                    <option value="กรกฎาคม 2569">กรกฎาคม 2569</option>
+                                    <option value="สิงหาคม 2569">สิงหาคม 2569</option>
+                                    <option value="กันยายน 2569">กันยายน 2569</option>
+                                    <option value="ตุลาคม 2569" selected>ตุลาคม 2569</option>
+                                    <option value="พฤศจิกายน 2569">พฤศจิกายน 2569</option>
+                                    <option value="ธันวาคม 2569">ธันวาคม 2569</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+
+                <!-- ===================================================================== -->
+                <!-- TAB 1: OVERVIEW DASHBOARD                                             -->
+                <!-- ===================================================================== -->
+                <section id="view-dashboard" class="tab-view space-y-6">
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- KPI 1: Editable Carry Forward -->
+                        <div class="bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden hover:-translate-y-0.5 transition-all">
+                            <div class="card-header-navy px-4 py-2.5 flex items-center justify-between text-white">
+                                <span class="text-xs font-medium text-slate-200">ยอดยกมาจากเดือนก่อน (แก้ไขได้)</span>
+                                <i class="fa-solid fa-wallet text-gold-400 text-sm"></i>
+                            </div>
+                            <div class="p-4">
+                                <div class="relative">
+                                    <input type="number" step="0.01" id="carryForwardInput" onchange="updateCarryForward(this.value)"
+                                           class="w-full text-xl font-bold text-navy-900 font-mono bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 focus:outline-none focus:border-gold-500">
+                                </div>
+                                <div class="text-[11px] text-slate-500 mt-1">แก้ไขเสร็จแล้วอย่าลืมกด "บันทึกข้อมูล"</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 2: ค่าส่วนกลาง -->
+                        <div class="bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden">
+                            <div class="card-header-navy px-4 py-2.5 flex items-center justify-between text-white">
+                                <span class="text-xs font-medium text-slate-200">ค่าส่วนกลาง (รายรับเดือนนี้)</span>
+                                <i class="fa-solid fa-users text-gold-400 text-sm"></i>
+                            </div>
+                            <div class="p-4">
+                                <div id="kpi-income" class="text-2xl font-bold text-amber-600 font-mono">32,765.00</div>
+                                <div id="kpi-income-sub" class="text-xs text-slate-500 mt-1">รวมยอดที่กดชำระแล้วเท่านั้น</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3: รายรับก่อนหัก -->
+                        <div class="bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden">
+                            <div class="card-header-navy px-4 py-2.5 flex items-center justify-between text-white">
+                                <span class="text-xs font-medium text-slate-200">รายรับก่อนหัก</span>
+                                <i class="fa-solid fa-hand-holding-dollar text-gold-400 text-sm"></i>
+                            </div>
+                            <div class="p-4">
+                                <div id="kpi-gross" class="text-2xl font-bold text-indigo-700 font-mono">857,081.63</div>
+                                <div class="text-xs text-slate-500 mt-1">ยอดยกมา + ค่าส่วนกลาง</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 4: รายจ่ายทั้งหมด -->
+                        <div class="bg-white rounded-2xl shadow-luxury border border-rose-200 overflow-hidden">
+                            <div class="card-header-navy px-4 py-2.5 flex items-center justify-between text-white">
+                                <span class="text-xs font-medium text-rose-200">รายจ่ายทั้งหมด</span>
+                                <i class="fa-solid fa-money-bill-transfer text-rose-400 text-sm"></i>
+                            </div>
+                            <div class="p-4 bg-rose-50/30">
+                                <div id="kpi-expense" class="text-2xl font-bold text-rose-600 font-mono">53,816.33</div>
+                                <div id="kpi-expense-sub" class="text-xs text-rose-600/80 mt-1 font-medium">รายการจ่ายประจำเดือน</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 5: ยอดเงินคงเหลือ -->
+                        <div class="bg-white rounded-2xl shadow-luxury border-2 border-emerald-500/40 overflow-hidden">
+                            <div class="card-header-navy px-4 py-2.5 flex items-center justify-between text-white">
+                                <span class="text-xs font-semibold text-gold-300">ยอดเงินคงเหลือสุทธิ</span>
+                                <i class="fa-solid fa-sack-dollar text-emerald-400 text-sm"></i>
+                            </div>
+                            <div class="p-4 bg-emerald-50/40">
+                                <div id="kpi-balance" class="text-2xl font-bold text-emerald-600 font-mono">803,265.30</div>
+                                <div class="text-xs text-emerald-700 mt-1 font-semibold">ยอดเงินที่ใช้ได้ทั้งหมด (บาท)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts & Tables Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-4 bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden flex flex-col">
+                            <div class="card-header-navy px-5 py-3 flex items-center justify-between text-white">
+                                <h3 class="font-display font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-chart-column text-gold-400"></i> สรุปรายการต่างๆ</h3>
+                            </div>
+                            <div class="p-4 flex-1 flex items-center justify-center min-h-[290px]">
+                                <canvas id="summaryBarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-4 bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden flex flex-col">
+                            <div class="card-header-navy px-5 py-3 flex items-center justify-between text-white">
+                                <h3 class="font-display font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-gold-400"></i> รายจ่ายประจำ</h3>
+                            </div>
+                            <div class="p-4 flex-1 flex items-center justify-center min-h-[290px]">
+                                <canvas id="recurringExpenseChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-4 bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden flex flex-col">
+                            <div class="card-header-navy px-5 py-3 flex items-center justify-between text-white">
+                                <h3 class="font-display font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-receipt text-gold-400"></i> รายการจ่ายทั้งหมด</h3>
+                                <button onclick="switchTab('ledger')" class="text-[11px] text-gold-300 hover:underline">ดูทั้งหมด</button>
+                            </div>
+                            <div class="p-3 flex-1 overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 text-slate-500 font-semibold">
+                                            <th class="py-2 px-2 text-left">รายการ</th>
+                                            <th class="py-2 px-2 text-right text-emerald-700">รายรับ</th>
+                                            <th class="py-2 px-2 text-right text-rose-600">รายจ่าย</th>
+                                            <th class="py-2 px-2 text-right text-navy-900">คงเหลือ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardQuickLedgerBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Widgets: Annual Trend, Bank Account with Image Upload -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6">
+                        <div class="md:col-span-2 xl:col-span-7 bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden flex flex-col">
+                            <div class="card-header-navy px-5 py-3 flex items-center justify-between text-white">
+                                <h3 class="font-display font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-chart-area text-gold-400"></i> แนวโน้มยอดเงินคงเหลือรายปี</h3>
+                            </div>
+                            <div class="p-4 flex-1 flex items-center justify-center min-h-[250px]">
+                                <canvas id="annualTrendChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Bank Account Card with Image Upload -->
+                        <div class="xl:col-span-5 bg-white rounded-2xl shadow-luxury border border-slate-200/80 overflow-hidden flex flex-col">
+                            <div class="card-header-navy px-4 py-3 flex items-center justify-between text-white">
+                                <h3 class="font-display font-semibold text-sm flex items-center gap-1.5">
+                                    <i class="fa-solid fa-building-columns text-gold-400"></i> หน้าบัญชี & แนบหลักฐาน
+                                </h3>
+                                <label class="cursor-pointer bg-gold-500 hover:bg-gold-600 text-navy-950 text-xs font-semibold px-3 py-1 rounded-lg transition shadow-sm flex items-center gap-1">
+                                    <i class="fa-solid fa-upload"></i> แนบรูปภาพ
+                                    <input type="file" accept="image/*" onchange="uploadBankSlip(event)" class="hidden">
+                                </label>
+                            </div>
+                            <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-[11px] text-slate-500 font-medium">ยอดเงินในบัญชีสุทธิ</div>
+                                        <div id="bankCardAvailBalance" class="text-xl font-bold font-mono text-emerald-600 mt-0.5">803,265.30</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[11px] text-slate-500">บัญชีธนาคาร</div>
+                                        <div class="font-mono text-xs font-bold text-navy-900">xxx-x-x9906-x</div>
+                                    </div>
+                                </div>
+
+                                <!-- Image Slip Preview Container -->
+                                <div id="bankSlipPreviewContainer" class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-2 text-center relative group min-h-[120px] flex items-center justify-center overflow-hidden">
+                                    <div id="bankSlipPlaceholder" class="text-slate-400 text-xs flex flex-col items-center justify-center gap-1">
+                                        <i class="fa-regular fa-image text-2xl text-slate-300"></i>
+                                        <span>ยังไม่มีรูปภาพหน้าบัญชี / สลิปของเดือนนี้</span>
+                                        <span class="text-[10px] text-slate-400">คลิก "แนบรูปภาพ" ด้านบนเพื่ออัปโหลด</span>
+                                    </div>
+                                    <img id="bankSlipImage" src="" alt="Bank Slip" class="hidden max-h-40 rounded-lg object-contain shadow-sm cursor-pointer" onclick="openImageModal(this.src)">
+                                    <button id="removeSlipBtn" onclick="removeBankSlip()" class="hidden absolute top-2 right-2 bg-rose-600 text-white rounded-full p-1.5 text-xs shadow hover:bg-rose-700 transition" title="ลบรูปภาพ">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================================================================== -->
+                <!-- TAB 2: COMMON FEE INCOME (CLICK TO PAY)                               -->
+                <!-- ===================================================================== -->
+                <section id="view-income" class="tab-view hidden space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-2xl p-5 shadow-luxury border border-slate-200">
+                            <div class="text-xs font-medium text-slate-500">ยอดจัดเก็บค่าส่วนกลางที่ชำระแล้ว + ค่าปรับ</div>
+                            <div id="incomeTabTotal" class="text-2xl font-bold font-mono text-emerald-600 mt-1">32,765.00 บาท</div>
+                            <div class="text-[11px] text-slate-400 mt-1">คำนวณเฉพาะรายการที่กด "จ่ายแล้ว"</div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-luxury border border-slate-200">
+                            <div class="text-xs font-medium text-slate-500">ชำระรายเดือนเรียบร้อย</div>
+                            <div id="incomeTabPaidCount" class="text-2xl font-bold text-navy-900 mt-1">30 หลัง</div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-luxury border border-slate-200">
+                            <div class="text-xs font-medium text-slate-500">ชำระแบบรายปี (ล่วงหน้า)</div>
+                            <div id="incomeTabAnnualCount" class="text-2xl font-bold text-blue-700 mt-1">5 หลัง</div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-luxury border border-amber-300 bg-amber-50/30">
+                            <div class="text-xs font-medium text-amber-800">ยอดรวมค่าปรับ (Fine)</div>
+                            <div id="incomeTabFineTotal" class="text-2xl font-bold font-mono text-amber-600 mt-1">0.00 บาท</div>
+                        </div>
+                    </div>
+
+                    <!-- Fine Entry Form -->
+                    <div class="bg-white rounded-2xl shadow-luxury border border-amber-300/80 p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div>
+                            <h4 class="font-display font-bold text-sm text-navy-900">เพิ่มจำนวนเงินค่าปรับเพิ่มเติม</h4>
+                            <p class="text-xs text-slate-500 mt-0.5">ระบุค่าปรับชำระล่าช้า ระบบจะรวมยอดเข้าสู่รายรับและรายการเดินบัญชีอัตโนมัติ</p>
+                        </div>
+                        <form id="generalFineForm" onsubmit="addGeneralFine(event)" class="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                            <input type="text" id="generalFineNoteInput" placeholder="หมายเหตุค่าปรับ" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none w-full sm:w-48">
+                            <input type="number" step="0.01" min="0" id="generalFineAmountInput" required placeholder="จำนวนเงิน (บาท)" class="px-3.5 py-2 rounded-xl border border-amber-400 bg-amber-50/40 text-xs font-mono font-bold w-full sm:w-40">
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-navy-900 hover:bg-navy-800 text-gold-300 text-xs font-semibold whitespace-nowrap"><i class="fa-solid fa-plus"></i> เพิ่มค่าปรับ</button>
+                            <button type="button" onclick="resetGeneralFine()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-600 text-xs">ล้างยอด</button>
+                        </form>
+                    </div>
+
+                    <!-- House Table -->
+                    <div class="bg-white rounded-2xl shadow-luxury border border-slate-200 overflow-hidden">
+                        <div class="card-header-navy px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 text-white">
+                            <div>
+                                <h3 class="font-display font-bold text-base"><i class="fa-solid fa-house-user text-gold-400"></i> ทะเบียนจัดเก็บค่าส่วนกลาง (บ้านเลขที่ 108/1 - 108/39)</h3>
+                                <p class="text-xs text-slate-300 mt-0.5">กดปุ่มสถานะเพื่อ "รับชำระ / ยกเลิกชำระ" ยอดเงินจะบวกเข้ายอดรวมอัตโนมัติเมื่อกดรับชำระแล้ว</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <input type="text" id="houseSearchInput" oninput="renderHousesTable()" placeholder="ค้นหาบ้านเลขที่..." class="px-3 py-1.5 rounded-xl bg-navy-800 border border-slate-600 text-xs text-white placeholder-slate-400">
+                                <button onclick="markAllUnpaidForNewMonth()" class="px-3 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold transition" title="รีเซ็ตทุกหลังเป็นยังไม่ชำระสำหรับขึ้นเดือนใหม่">
+                                    <i class="fa-solid fa-rotate-left"></i> รีเซ็ตเป็นยังไม่ชำระทั้งหมด
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm border-collapse">
+                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3 px-4 w-14 text-center">ลำดับ</th>
+                                        <th class="py-3 px-4">บ้านเลขที่ / รายการ</th>
+                                        <th class="py-3 px-4 text-right">อัตราค่าส่วนกลาง</th>
+                                        <th class="py-3 px-4 text-right w-36">ค่าปรับ (บาท)</th>
+                                        <th class="py-3 px-4 text-right">ยอดรับจริง (บาท)</th>
+                                        <th class="py-3 px-4 text-center">สถานะ</th>
+                                        <th class="py-3 px-4">หมายเหตุ</th>
+                                        <th class="py-3 px-4 text-center">กดรับชำระ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="houseTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
+                                <tfoot>
+                                    <tr class="bg-navy-900 text-white font-bold">
+                                        <td colspan="2" class="py-3.5 px-4 text-right text-gold-300">รวมยอดจัดเก็บที่ชำระแล้วทั้งสิ้น:</td>
+                                        <td id="houseTableFooterBase" class="py-3.5 px-4 text-right font-mono">32,765.00</td>
+                                        <td id="houseTableFooterFine" class="py-3.5 px-4 text-right font-mono text-amber-300">0.00</td>
+                                        <td id="houseTableFooterTotal" class="py-3.5 px-4 text-right font-mono text-emerald-400">32,765.00</td>
+                                        <td colspan="3" class="py-3.5 px-4 text-xs text-slate-300">บาท</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================================================================== -->
+                <!-- TAB 3: EXPENSE BREAKDOWN (ADD & DELETE)                               -->
+                <!-- ===================================================================== -->
+                <section id="view-expenses" class="tab-view hidden space-y-6">
+                    <!-- Add New Expense Card -->
+                    <div class="bg-white rounded-2xl shadow-luxury border border-rose-200 p-5">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div>
+                                <h4 class="font-display font-bold text-sm sm:text-base text-navy-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-plus text-rose-600"></i> เพิ่มรายการรายจ่ายใหม่
+                                </h4>
+                                <p class="text-xs text-slate-500 mt-0.5">กรอกชื่อรายการ ประเภท และจำนวนเงิน เพื่อเพิ่มเข้าสู่รายการจ่ายและรายการเดินบัญชี</p>
+                            </div>
+                            <form id="addExpenseForm" onsubmit="addNewExpense(event)" class="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                                <input type="text" id="newExpName" required placeholder="ชื่อรายการจ่าย (เช่น ค่าซ่อมไฟถนน)" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-navy-900 w-full sm:w-56">
+                                <select id="newExpType" class="px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-navy-900 bg-white w-full sm:w-44">
+                                    <option value="รายจ่ายประจำ">รายจ่ายประจำ</option>
+                                    <option value="รายจ่ายซ่อมบำรุง">รายจ่ายซ่อมบำรุง</option>
+                                    <option value="รายจ่ายอุปกรณ์">รายจ่ายอุปกรณ์</option>
+                                    <option value="รายจ่ายบริหารจัดการ">รายจ่ายบริหารจัดการ</option>
+                                    <option value="อื่นๆ">อื่นๆ</option>
+                                </select>
+                                <input type="number" step="0.01" min="0.01" id="newExpAmount" required placeholder="จำนวนเงิน (บาท)" class="px-3.5 py-2 rounded-xl border border-rose-300 bg-rose-50/30 text-xs font-mono font-bold text-rose-700 focus:outline-none focus:border-rose-500 w-full sm:w-40">
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold whitespace-nowrap transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-plus"></i> เพิ่มรายการจ่าย
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-5 bg-white rounded-2xl shadow-luxury border border-slate-200 overflow-hidden flex flex-col">
+                            <div class="card-header-navy px-5 py-3.5 text-white">
+                                <h3 class="font-display font-semibold text-sm"><i class="fa-solid fa-chart-pie text-gold-400"></i> สัดส่วนรายจ่ายประจำเดือน</h3>
+                            </div>
+                            <div class="p-6 flex-1 flex flex-col items-center justify-center">
+                                <div class="w-full max-w-[300px] h-[280px]"><canvas id="expenseDoughnutChart"></canvas></div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-7 bg-white rounded-2xl shadow-luxury border border-slate-200 overflow-hidden">
+                            <div class="card-header-navy px-6 py-3.5 flex items-center justify-between text-white">
+                                <h3 class="font-display font-semibold text-sm"><i class="fa-solid fa-file-invoice text-gold-400"></i> รายละเอียดหมวดหมู่รายจ่าย (เพิ่ม/ลบได้)</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm border-collapse">
+                                    <thead class="bg-slate-50 border-b text-slate-600 text-xs">
+                                        <tr>
+                                            <th class="py-3 px-4 text-center w-14">ลำดับ</th>
+                                            <th class="py-3 px-4 text-left">รายการรายจ่าย</th>
+                                            <th class="py-3 px-4 text-left">ประเภท</th>
+                                            <th class="py-3 px-4 text-right">จำนวนเงิน (บาท)</th>
+                                            <th class="py-3 px-4 text-center w-20">ลบรายการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="expenseDetailTableBody" class="divide-y divide-slate-100"></tbody>
+                                    <tfoot>
+                                        <tr class="bg-rose-50 border-t-2 border-rose-200 font-bold text-rose-700">
+                                            <td colspan="3" class="py-3 px-4 text-right">รวมรายจ่ายทั้งหมด:</td>
+                                            <td id="expenseDetailFooterTotal" class="py-3 px-4 text-right font-mono">53,816.33</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================================================================== -->
+                <!-- TAB 4: CASH FLOW LEDGER                                               -->
+                <!-- ===================================================================== -->
+                <section id="view-ledger" class="tab-view hidden space-y-6">
+                    <div class="bg-white rounded-2xl shadow-luxury border border-slate-200 overflow-hidden">
+                        <div class="card-header-navy px-6 py-4 flex items-center justify-between text-white">
+                            <h3 class="font-display font-bold text-base"><i class="fa-solid fa-book-open text-gold-400"></i> รายการเดินบัญชีรายรับ - รายจ่าย (Cash Flow Ledger)</h3>
+                            <button onclick="exportLedgerCSV()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead class="bg-slate-50 border-b text-slate-600 text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3.5 px-5 text-center w-16">ลำดับ</th>
+                                        <th class="py-3.5 px-5 text-left">รายการเดินบัญชี</th>
+                                        <th class="py-3.5 px-5 text-center">ประเภท</th>
+                                        <th class="py-3.5 px-5 text-right text-emerald-700">รายรับ (บาท)</th>
+                                        <th class="py-3.5 px-5 text-right text-rose-700">รายจ่าย (บาท)</th>
+                                        <th class="py-3.5 px-5 text-right text-navy-900">ยอดเงินคงเหลือ (บาท)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fullLedgerTableBody" class="divide-y divide-slate-100"></tbody>
+                                <tfoot>
+                                    <tr class="bg-navy-900 text-white font-bold text-sm">
+                                        <td colspan="3" class="py-4 px-5 text-right text-gold-300">รวมยอดเคลื่อนไหวประจำเดือน:</td>
+                                        <td id="fullLedgerTotalIn" class="py-4 px-5 text-right font-mono text-emerald-400">32,765.00</td>
+                                        <td id="fullLedgerTotalOut" class="py-4 px-5 text-right font-mono text-rose-400">53,816.33</td>
+                                        <td id="fullLedgerTotalBal" class="py-4 px-5 text-right font-mono text-gold-300">803,265.30</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===================================================================== -->
+                <!-- TAB 5: ANNUAL SUMMARY                                                 -->
+                <!-- ===================================================================== -->
+                <section id="view-annual" class="tab-view hidden space-y-6">
+                    <div class="bg-white rounded-2xl shadow-luxury border border-slate-200 overflow-hidden">
+                        <div class="card-header-navy px-6 py-4 text-white">
+                            <h3 class="font-display font-bold text-base"><i class="fa-solid fa-sack-dollar text-gold-400"></i> สรุปยอดเงินคงเหลือประจำปี 2569</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse">
+                                <thead class="bg-slate-50 border-b text-slate-600 text-xs uppercase">
+                                    <tr>
+                                        <th class="py-3.5 px-6 text-center w-20">งวดที่</th>
+                                        <th class="py-3.5 px-6 text-left">เดือน (Month)</th>
+                                        <th class="py-3.5 px-6 text-right">ยอดเงินคงเหลือสุทธิ (Total Balance)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="annualSummaryTableBody" class="divide-y divide-slate-100 font-mono text-slate-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-navy-950/80 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4" onclick="closeImageModal()">
+        <div class="relative max-w-4xl max-h-[90vh]">
+            <img id="modalImageSrc" src="" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-2 border-gold-400 object-contain">
+            <button onclick="closeImageModal()" class="absolute -top-4 -right-4 bg-white text-navy-950 rounded-full w-9 h-9 flex items-center justify-center font-bold shadow-lg hover:bg-slate-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Default Data Structure per Month (Includes baseRate so toggling paid/unpaid remembers the house rate)
+        const defaultMonthlyData = {
+            carryForward: 824316.63,
+            bankSlip: "",
+            generalFineAmount: 0,
+            generalFineNote: "ค่าปรับชำระล่าช้า",
+            houses: [
+                { id: 1, house: '108/1', baseRate: 840, amount: 0, fine: 0, status: 'annual', note: 'ชำระรายปีเรียบร้อย' },
+                { id: 2, house: '108/2', baseRate: 840, amount: 0, fine: 0, status: 'annual', note: 'ชำระรายปีเรียบร้อย' },
+                { id: 3, house: '108/3', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 4, house: '108/4', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 5, house: '108/5', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 6, house: '108/6', baseRate: 845, amount: 845, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 7, house: '108/7', baseRate: 840, amount: 0, fine: 0, status: 'annual', note: 'ชำระรายปีเรียบร้อย' },
+                { id: 8, house: '108/8', baseRate: 840, amount: 0, fine: 0, status: 'annual', note: 'ชำระรายปีเรียบร้อย' },
+                { id: 9, house: '108/9', baseRate: 850, amount: 850, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 10, house: '108/10', baseRate: 855, amount: 855, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 11, house: '108/11', baseRate: 855, amount: 855, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 12, house: '108/12', baseRate: 855, amount: 855, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 13, house: '108/13', baseRate: 860, amount: 860, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 14, house: '108/14', baseRate: 1800, amount: 1800, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง (ควบงวด)' },
+                { id: 15, house: '108/15', baseRate: 1265, amount: 1265, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 16, house: '108/16', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 17, house: '108/17', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 18, house: '108/18', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 19, house: '108/19', baseRate: 840, amount: 0, fine: 0, status: 'unpaid', note: 'ค้างชำระหลายงวด' },
+                { id: 20, house: '108/20', baseRate: 1065, amount: 1065, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 21, house: '108/21', baseRate: 840, amount: 0, fine: 0, status: 'annual', note: 'ชำระรายปีเรียบร้อย' },
+                { id: 22, house: '108/22', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 23, house: '108/23', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 24, house: '108/24', baseRate: 845, amount: 845, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 25, house: '108/25', baseRate: 845, amount: 845, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 26, house: '108/26', baseRate: 845, amount: 845, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 27, house: '108/27', baseRate: 1935, amount: 1935, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 28, house: '108/28', baseRate: 2220, amount: 2220, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 29, house: '108/29', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 30, house: '108/30', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 31, house: '108/31', baseRate: 840, amount: 0, fine: 0, status: 'unpaid', note: 'ยังไม่ชำระ' },
+                { id: 32, house: '108/32', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 33, house: '108/33', baseRate: 1065, amount: 1065, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 34, house: '108/34', baseRate: 1065, amount: 1065, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 35, house: '108/35', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 36, house: '108/36', baseRate: 840, amount: 840, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 37, house: '108/37', baseRate: 840, amount: 0, fine: 0, status: 'unpaid', note: 'ยังไม่ชำระ' },
+                { id: 38, house: '108/38', baseRate: 840, amount: 0, fine: 0, status: 'unpaid', note: 'ยังไม่ชำระ' },
+                { id: 39, house: '108/39', baseRate: 3275, amount: 3275, fine: 0, status: 'paid', note: 'ชำระค่าส่วนกลาง' },
+                { id: 40, house: 'ค่ารถ (ค่าจอดรถ)', baseRate: 500, amount: 500, fine: 0, status: 'paid', note: 'ค่าบริการจอดรถ', isExtra: true }
+            ],
+            expenses: [
+                { id: 1, name: 'ค่า รปภ.', type: 'รายจ่ายประจำ', amount: 30000 },
+                { id: 2, name: 'ค่าไฟฟ้า', type: 'รายจ่ายประจำ', amount: 6580.84 },
+                { id: 3, name: 'ค่าน้ำประปา', type: 'รายจ่ายประจำ', amount: 313.49 },
+                { id: 4, name: 'ค่าขยะ', type: 'รายจ่ายประจำ', amount: 1080 },
+                { id: 5, name: 'ค่า HDD(CCTV) 8 TB', type: 'รายจ่ายอุปกรณ์', amount: 15500 },
+                { id: 6, name: 'ค่าไม้กั้นจอดรถ', type: 'รายจ่ายซ่อมบำรุง', amount: 342 }
+            ]
+        };
+
+        let currentMonth = 'ตุลาคม 2569';
+        let hasUnsavedChanges = false;
+        let allMonthsData = JSON.parse(localStorage.getItem('premierGrand_allMonths')) || {};
+
+        function getMonthData() {
+            if (!allMonthsData[currentMonth]) {
+                allMonthsData[currentMonth] = JSON.parse(JSON.stringify(defaultMonthlyData));
+            }
+            return allMonthsData[currentMonth];
+        }
+
+        // Mark state as unsaved (NO AUTO-SAVE)
+        function markAsUnsaved() {
+            hasUnsavedChanges = true;
+            const badge = document.getElementById('saveStatusBadge');
+            const btn = document.getElementById('manualSaveBtn');
+            if (badge) {
+                badge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-300';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-ping"></span> ยังไม่บันทึก';
+            }
+            if (btn) {
+                btn.className = 'px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-navy-950 font-display font-bold text-xs sm:text-sm shadow-goldGlow transition-all flex items-center gap-2 cursor-pointer';
+            }
+        }
+
+        // Manual Save Trigger
+        function manualSaveData() {
+            localStorage.setItem('premierGrand_allMonths', JSON.stringify(allMonthsData));
+            hasUnsavedChanges = false;
+            const badge = document.getElementById('saveStatusBadge');
+            const btn = document.getElementById('manualSaveBtn');
+            if (badge) {
+                badge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> บันทึกแล้ว';
+            }
+            if (btn) {
+                btn.className = 'px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer';
+            }
+            showToast(`บันทึกข้อมูลประจำเดือน ${currentMonth} เรียบร้อยแล้ว`, 'success');
+        }
+
+        function changeActiveMonth(month) {
+            if (hasUnsavedChanges) {
+                const confirmChange = confirm(`คุณมีการแก้ไขข้อมูลในเดือน "${currentMonth}" ที่ยังไม่ได้กดบันทึก\nต้องการเปลี่ยนเดือนโดยไม่บันทึกหรือไม่?`);
+                if (!confirmChange) {
+                    document.getElementById('globalMonthSelect').value = currentMonth;
+                    return;
+                }
+                // Reload clean state from localStorage
+                allMonthsData = JSON.parse(localStorage.getItem('premierGrand_allMonths')) || {};
+            }
+            currentMonth = month;
+            hasUnsavedChanges = false;
+            const badge = document.getElementById('saveStatusBadge');
+            const btn = document.getElementById('manualSaveBtn');
+            if (badge) {
+                badge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> บันทึกแล้ว';
+            }
+            if (btn) {
+                btn.className = 'px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-display font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer';
+            }
+            document.getElementById('pageTitle').textContent = `สรุปรายรับ - รายจ่ายประจำเดือน${month}`;
+            refreshAllUI();
+            showToast(`โหลดข้อมูลประจำเดือน ${month} เรียบร้อย`, 'info');
+        }
+
+        let charts = {};
+
+        function formatMoney(num) {
+            return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2.5 text-white transition-all transform translate-y-2 opacity-0 ${type === 'success' ? 'bg-emerald-600' : 'bg-navy-900'}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-300' : 'fa-circle-info text-gold-300'}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobileOverlay').classList.toggle('hidden');
+        }
+
+        // Calculations & Financial Totals
+        function getFinancialTotals() {
+            const data = getMonthData();
+            // Only count paid houses towards collected baseCommonIncome
+            const baseCommonIncome = data.houses.reduce((sum, item) => {
+                return sum + (item.status === 'paid' ? Number(item.amount || item.baseRate || 0) : 0);
+            }, 0);
+            const houseFinesTotal = data.houses.reduce((sum, item) => sum + (Number(item.fine) || 0), 0);
+            const totalFineIncome = houseFinesTotal + Number(data.generalFineAmount || 0);
+            const totalIncome = baseCommonIncome + totalFineIncome;
+            const grossIncome = Number(data.carryForward) + totalIncome;
+            const totalExpense = data.expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+            const netBalance = grossIncome - totalExpense;
+            const diff = totalIncome - totalExpense;
+
+            return { baseCommonIncome, houseFinesTotal, totalFineIncome, totalIncome, grossIncome, totalExpense, netBalance, diff };
+        }
+
+        function updateCarryForward(val) {
+            const data = getMonthData();
+            data.carryForward = Number(val) || 0;
+            markAsUnsaved();
+            refreshAllUI();
+            showToast('คำนวณยอดยกมาใหม่แล้ว (กดปุ่มบันทึกข้อมูลเพื่อเก็บถาวร)', 'info');
+        }
+
+        function addGeneralFine(e) {
+            e.preventDefault();
+            const note = document.getElementById('generalFineNoteInput').value;
+            const amt = Number(document.getElementById('generalFineAmountInput').value);
+            const data = getMonthData();
+            data.generalFineNote = note || 'ค่าปรับชำระล่าช้า';
+            data.generalFineAmount = (Number(data.generalFineAmount) || 0) + amt;
+            markAsUnsaved();
+            document.getElementById('generalFineForm').reset();
+            refreshAllUI();
+            showToast('เพิ่มค่าปรับแล้ว (อย่าลืมกดปุ่มบันทึกข้อมูล)', 'info');
+        }
+
+        function resetGeneralFine() {
+            const data = getMonthData();
+            data.generalFineAmount = 0;
+            markAsUnsaved();
+            refreshAllUI();
+            showToast('ล้างยอดค่าปรับเพิ่มเติมแล้ว', 'info');
+        }
+
+        // Bank Slip Upload & Management
+        function uploadBankSlip(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const data = getMonthData();
+                data.bankSlip = event.target.result;
+                markAsUnsaved();
+                renderBankSlip();
+                showToast('แนบรูปภาพหน้าบัญชีแล้ว (กดปุ่มบันทึกข้อมูลเพื่อเก็บถาวร)', 'info');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeBankSlip() {
+            const data = getMonthData();
+            data.bankSlip = "";
+            markAsUnsaved();
+            renderBankSlip();
+            showToast('ลบรูปภาพหน้าบัญชีแล้ว', 'info');
+        }
+
+        function renderBankSlip() {
+            const data = getMonthData();
+            const placeholder = document.getElementById('bankSlipPlaceholder');
+            const img = document.getElementById('bankSlipImage');
+            const removeBtn = document.getElementById('removeSlipBtn');
+
+            if (data.bankSlip) {
+                img.src = data.bankSlip;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                removeBtn.classList.remove('hidden');
+            } else {
+                img.src = "";
+                img.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                removeBtn.classList.add('hidden');
+            }
+        }
+
+        function openImageModal(src) {
+            if (!src) return;
+            document.getElementById('modalImageSrc').src = src;
+            document.getElementById('imageModal').classList.remove('hidden');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        // Refresh UI & Tables
+        function refreshAllUI() {
+            const totals = getFinancialTotals();
+            const data = getMonthData();
+
+            document.getElementById('carryForwardInput').value = data.carryForward;
+            document.getElementById('kpi-income').textContent = formatMoney(totals.totalIncome);
+            document.getElementById('kpi-gross').textContent = formatMoney(totals.grossIncome);
+            document.getElementById('kpi-expense').textContent = formatMoney(totals.totalExpense);
+            document.getElementById('kpi-expense-sub').textContent = `${data.expenses.length} รายการจ่ายประจำเดือน`;
+            document.getElementById('kpi-balance').textContent = formatMoney(totals.netBalance);
+            document.getElementById('bankCardAvailBalance').textContent = formatMoney(totals.netBalance);
+
+            renderBankSlip();
+            renderQuickLedger(totals);
+            renderHousesTable(totals);
+            renderExpenseDetailTable(totals);
+            renderFullLedgerTable(totals);
+            renderAnnualSummaryTable(totals);
+            updateAllCharts(totals);
+        }
+
+        function renderQuickLedger(totals) {
+            const tbody = document.getElementById('dashboardQuickLedgerBody');
+            const cf = Number(getMonthData().carryForward);
+            const entries = [
+                { name: 'ยอดยกมา', in: 0, out: 0, bal: cf },
+                { name: 'ค่าส่วนกลาง (ชำระแล้ว)', in: totals.baseCommonIncome, out: 0, bal: cf + totals.baseCommonIncome },
+                { name: 'รายจ่ายรวม', in: 0, out: totals.totalExpense, bal: totals.netBalance }
+            ];
+            tbody.innerHTML = entries.map(e => `
+                <tr class="border-b border-slate-100">
+                    <td class="py-2 px-2 font-medium">${e.name}</td>
+                    <td class="py-2 px-2 text-right font-mono text-emerald-600">${e.in > 0 ? formatMoney(e.in) : '-'}</td>
+                    <td class="py-2 px-2 text-right font-mono text-rose-600">${e.out > 0 ? formatMoney(e.out) : '-'}</td>
+                    <td class="py-2 px-2 text-right font-mono font-bold text-navy-900">${formatMoney(e.bal)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderHousesTable(totals) {
+            const data = getMonthData();
+            const tbody = document.getElementById('houseTableBody');
+            const search = (document.getElementById('houseSearchInput')?.value || '').toLowerCase();
+            let html = '';
+            let filtered = data.houses.filter(h => h.house.toLowerCase().includes(search) || h.note.toLowerCase().includes(search));
+
+            filtered.forEach((h, idx) => {
+                const rate = Number(h.baseRate || h.amount || 840);
+                const collectedBase = h.status === 'paid' ? rate : 0;
+                const totalItem = collectedBase + (Number(h.fine) || 0);
+
+                const badgeClass = h.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : (h.status === 'annual' ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800');
+                const badgeText = h.status === 'paid' ? 'จ่ายแล้ว' : (h.status === 'annual' ? 'รายปี' : 'ยังไม่ชำระ');
+
+                const actionBtn = h.status === 'paid'
+                    ? `<button onclick="toggleHouseStatus(${h.id})" class="px-3 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition cursor-pointer"><i class="fa-solid fa-xmark mr-1"></i>ยกเลิกชำระ</button>`
+                    : `<button onclick="toggleHouseStatus(${h.id})" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-2xs transition cursor-pointer"><i class="fa-solid fa-check mr-1"></i>กดรับชำระ</button>`;
+
+                html += `
+                    <tr class="hover:bg-slate-50/80 transition ${h.status === 'paid' ? 'bg-emerald-50/20' : ''}">
+                        <td class="py-2.5 px-4 text-center text-slate-500">${idx + 1}</td>
+                        <td class="py-2.5 px-4 font-semibold text-navy-900">${h.house}</td>
+                        <td class="py-2.5 px-4 text-right font-mono text-slate-600">${formatMoney(rate)}</td>
+                        <td class="py-2.5 px-4 text-right">
+                            <input type="number" step="0.01" min="0" value="${h.fine || 0}" onchange="updateHouseFine(${h.id}, this.value)"
+                                   class="w-24 px-2 py-1 text-right font-mono text-xs border border-amber-300 rounded-lg bg-amber-50/30 focus:outline-none focus:border-gold-500">
+                        </td>
+                        <td class="py-2.5 px-4 text-right font-mono font-bold ${totalItem > 0 ? 'text-emerald-600' : 'text-slate-400'}">${formatMoney(totalItem)}</td>
+                        <td class="py-2.5 px-4 text-center"><span class="px-2.5 py-1 rounded-full text-[11px] font-semibold ${badgeClass}">${badgeText}</span></td>
+                        <td class="py-2.5 px-4 text-slate-500 text-xs">${h.note}</td>
+                        <td class="py-2.5 px-4 text-center">${actionBtn}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+
+            const t = totals || getFinancialTotals();
+            document.getElementById('houseTableFooterBase').textContent = formatMoney(t.baseCommonIncome);
+            document.getElementById('houseTableFooterFine').textContent = formatMoney(t.totalFineIncome);
+            document.getElementById('houseTableFooterTotal').textContent = formatMoney(t.baseCommonIncome + t.totalFineIncome);
+            document.getElementById('incomeTabTotal').textContent = formatMoney(t.baseCommonIncome + t.totalFineIncome) + ' บาท';
+            document.getElementById('incomeTabFineTotal').textContent = formatMoney(t.totalFineIncome) + ' บาท';
+            document.getElementById('incomeTabPaidCount').textContent = data.houses.filter(x => x.status === 'paid').length + ' หลัง';
+            document.getElementById('incomeTabAnnualCount').textContent = data.houses.filter(x => x.status === 'annual').length + ' หลัง';
+        }
+
+        function updateHouseFine(id, val) {
+            const data = getMonthData();
+            const house = data.houses.find(h => h.id === id);
+            if (house) {
+                house.fine = Number(val) || 0;
+                markAsUnsaved();
+                refreshAllUI();
+                showToast('อัปเดตค่าปรับแล้ว (กดปุ่มบันทึกข้อมูลเพื่อเก็บถาวร)', 'info');
+            }
+        }
+
+        function toggleHouseStatus(id) {
+            const data = getMonthData();
+            const house = data.houses.find(h => h.id === id);
+            if (house) {
+                const rate = Number(house.baseRate || house.amount || 840);
+                if (house.status === 'paid') {
+                    house.status = 'unpaid';
+                    house.amount = 0;
+                    house.note = 'ยังไม่ชำระ';
+                    showToast(`ยกเลิกสถานะชำระบ้าน ${house.house} (ยอดรวมลดลง ${formatMoney(rate)} บ.)`, 'info');
+                } else {
+                    house.status = 'paid';
+                    house.amount = rate;
+                    house.note = 'ชำระค่าส่วนกลางเรียบร้อย';
+                    showToast(`รับชำระบ้าน ${house.house} สำเร็จ (+${formatMoney(rate)} บ.)`, 'success');
+                }
+                markAsUnsaved();
+                refreshAllUI();
+            }
+        }
+
+        function markAllUnpaidForNewMonth() {
+            if (!confirm('ต้องการรีเซ็ตบ้านทุกหลัง (ยกเว้นรายปี) เป็น "ยังไม่ชำระ" เพื่อเริ่มบันทึกการรับชำระใหม่ใช่หรือไม่?')) return;
+            const data = getMonthData();
+            data.houses.forEach(h => {
+                if (h.status !== 'annual') {
+                    h.status = 'unpaid';
+                    h.amount = 0;
+                    h.fine = 0;
+                    h.note = 'ยังไม่ชำระ';
+                }
+            });
+            markAsUnsaved();
+            refreshAllUI();
+            showToast('รีเซ็ตเป็นยังไม่ชำระทั้งหมดเรียบร้อย ยอดรวมเริ่มต้นที่ 0.00 บาท', 'info');
+        }
+
+        // Add & Delete Expenses
+        function addNewExpense(e) {
+            e.preventDefault();
+            const name = document.getElementById('newExpName').value.trim();
+            const type = document.getElementById('newExpType').value;
+            const amount = Number(document.getElementById('newExpAmount').value);
+            if (!name || amount <= 0) return;
+
+            const data = getMonthData();
+            const newId = data.expenses.length > 0 ? Math.max(...data.expenses.map(x => x.id)) + 1 : 1;
+            data.expenses.push({ id: newId, name, type, amount });
+            markAsUnsaved();
+            document.getElementById('addExpenseForm').reset();
+            refreshAllUI();
+            showToast(`เพิ่มรายการจ่าย "${name}" จำนวน ${formatMoney(amount)} บาท แล้ว`, 'success');
+        }
+
+        function renderExpenseDetailTable(totals) {
+            const data = getMonthData();
+            const tbody = document.getElementById('expenseDetailTableBody');
+            let html = '';
+            data.expenses.forEach((exp, idx) => {
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 text-center text-slate-500">${idx + 1}</td>
+                        <td class="py-3 px-4 font-medium text-navy-900">${exp.name}</td>
+                        <td class="py-3 px-4 text-slate-600">${exp.type}</td>
+                        <td class="py-3 px-4 text-right font-mono font-semibold text-rose-600">${formatMoney(exp.amount)}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="deleteExpense(${exp.id})" class="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition cursor-pointer" title="ลบรายการนี้"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+            const t = totals || getFinancialTotals();
+            document.getElementById('expenseDetailFooterTotal').textContent = formatMoney(t.totalExpense);
+        }
+
+        function deleteExpense(id) {
+            const data = getMonthData();
+            data.expenses = data.expenses.filter(e => e.id !== id);
+            markAsUnsaved();
+            refreshAllUI();
+            showToast('ลบรายการรายจ่ายเรียบร้อย (อย่าลืมกดปุ่มบันทึกข้อมูล)', 'info');
+        }
+
+        function renderFullLedgerTable(totals) {
+            const data = getMonthData();
+            const t = totals || getFinancialTotals();
+            const tbody = document.getElementById('fullLedgerTableBody');
+            let running = Number(data.carryForward);
+            let seq = 1;
+            let html = `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-5 text-center text-slate-500">${seq++}</td>
+                    <td class="py-3 px-5 font-medium text-navy-900">ยอดยกมาจากเดือนก่อน</td>
+                    <td class="py-3 px-5 text-center"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-semibold">ยอดยกมา</span></td>
+                    <td class="py-3 px-5 text-right font-mono text-emerald-600">-</td>
+                    <td class="py-3 px-5 text-right font-mono text-rose-600">-</td>
+                    <td class="py-3 px-5 text-right font-mono font-bold text-navy-900">${formatMoney(running)}</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-5 text-center text-slate-500">${seq++}</td>
+                    <td class="py-3 px-5 font-medium text-navy-900">ค่าส่วนกลางและค่าบริการรวม (เฉพาะที่ชำระแล้ว)</td>
+                    <td class="py-3 px-5 text-center"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-xs font-semibold">รายรับ</span></td>
+                    <td class="py-3 px-5 text-right font-mono text-emerald-600">${formatMoney(t.baseCommonIncome)}</td>
+                    <td class="py-3 px-5 text-right font-mono text-rose-600">-</td>
+                    <td class="py-3 px-5 text-right font-mono font-bold text-navy-900">${formatMoney(running += t.baseCommonIncome)}</td>
+                </tr>
+            `;
+
+            if (t.totalFineIncome > 0) {
+                running += t.totalFineIncome;
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-5 text-center text-slate-500">${seq++}</td>
+                        <td class="py-3 px-5 font-medium text-navy-900">ค่าปรับ (Fine)</td>
+                        <td class="py-3 px-5 text-center"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-xs font-semibold">ค่าปรับ</span></td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">${formatMoney(t.totalFineIncome)}</td>
+                        <td class="py-3 px-5 text-right font-mono text-rose-600">-</td>
+                        <td class="py-3 px-5 text-right font-mono font-bold text-navy-900">${formatMoney(running)}</td>
+                    </tr>
+                `;
+            }
+
+            data.expenses.forEach((exp) => {
+                running -= Number(exp.amount);
+                html += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-5 text-center text-slate-500">${seq++}</td>
+                        <td class="py-3 px-5 font-medium text-navy-900">${exp.name}</td>
+                        <td class="py-3 px-5 text-center"><span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 text-xs font-semibold">รายจ่าย</span></td>
+                        <td class="py-3 px-5 text-right font-mono text-emerald-600">-</td>
+                        <td class="py-3 px-5 text-right font-mono text-rose-600">${formatMoney(exp.amount)}</td>
+                        <td class="py-3 px-5 text-right font-mono font-bold text-navy-900">${formatMoney(running)}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('fullLedgerTotalIn').textContent = formatMoney(t.totalIncome);
+            document.getElementById('fullLedgerTotalOut').textContent = formatMoney(t.totalExpense);
+            document.getElementById('fullLedgerTotalBal').textContent = formatMoney(t.netBalance);
+        }
+
+        function renderAnnualSummaryTable() {
+            const tbody = document.getElementById('annualSummaryTableBody');
+            const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            let html = '';
+            months.forEach((m, idx) => {
+                const monthKey = `${m} 2569`;
+                const mData = allMonthsData[monthKey];
+                let bal = 803265.30;
+                if (mData) {
+                    const c = Number(mData.carryForward) || 0;
+                    const inc = mData.houses.reduce((s, h) => s + (h.status === 'paid' ? Number(h.amount || h.baseRate || 0) : 0) + (Number(h.fine) || 0), 0) + (Number(mData.generalFineAmount) || 0);
+                    const exp = mData.expenses.reduce((s, e) => s + Number(e.amount), 0);
+                    bal = (c + inc) - exp;
+                } else if (idx < 9) {
+                    const defaults = [876007.17, 832422.22, 850522.21, 849945.88, 839516.82, 830476.50, 828212.79, 826571.18, 824316.63];
+                    bal = defaults[idx];
+                }
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-6 text-center text-slate-500">${idx + 1}</td>
+                        <td class="py-3 px-6 font-display font-medium text-navy-900">${m} 2569</td>
+                        <td class="py-3 px-6 text-right font-mono font-bold text-emerald-600">${formatMoney(bal)} บาท</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function exportLedgerCSV() {
+            const t = getFinancialTotals();
+            let csv = "\uFEFFลำดับ,รายการเดินบัญชี,ประเภท,รายรับ,รายจ่าย,ยอดเงินคงเหลือ\n";
+            csv += `1,ยอดยกมาจากเดือนก่อน,ยอดยกมา,0,0,${getMonthData().carryForward}\n`;
+            csv += `2,ค่าส่วนกลางและค่าบริการ,รายรับ,${t.baseCommonIncome},0,${getMonthData().carryForward + t.baseCommonIncome}\n`;
+            if (t.totalFineIncome > 0) {
+                csv += `3,ค่าปรับ,ค่าปรับ,${t.totalFineIncome},0,${getMonthData().carryForward + t.baseCommonIncome + t.totalFineIncome}\n`;
+            }
+            getMonthData().expenses.forEach((e, i) => {
+                csv += `${i + 4},${e.name},รายจ่าย,0,${e.amount},-\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `CashFlow_Ledger_${currentMonth}.csv`;
+            link.click();
+            showToast('Export ไฟล์ CSV สำเร็จเรียบร้อย');
+        }
+
+        // Charts Initialization & Update
+        function updateAllCharts(totals) {
+            const data = getMonthData();
+            const t = totals || getFinancialTotals();
+
+            const ctx1 = document.getElementById('summaryBarChart').getContext('2d');
+            if (charts.summaryBar) charts.summaryBar.destroy();
+            charts.summaryBar = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['ยอดยกมา', 'รายรับรวม', 'รายจ่ายรวม', 'ยอดคงเหลือ'],
+                    datasets: [{
+                        data: [Number(data.carryForward), t.totalIncome, t.totalExpense, t.netBalance],
+                        backgroundColor: ['#1e293b', '#d4af37', '#e11d48', '#059669'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const ctx2 = document.getElementById('recurringExpenseChart').getContext('2d');
+            if (charts.recurring) charts.recurring.destroy();
+            charts.recurring = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: data.expenses.map(e => e.name),
+                    datasets: [{
+                        data: data.expenses.map(e => e.amount),
+                        backgroundColor: '#1e293b',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const ctx3 = document.getElementById('expenseDoughnutChart').getContext('2d');
+            if (charts.doughnut) charts.doughnut.destroy();
+            charts.doughnut = new Chart(ctx3, {
+                type: 'doughnut',
+                data: {
+                    labels: data.expenses.map(e => e.name),
+                    datasets: [{
+                        data: data.expenses.map(e => e.amount),
+                        backgroundColor: ['#0f172a', '#d4af37', '#059669', '#3b82f6', '#e11d48', '#8b5cf6', '#f97316', '#14b8a6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx4 = document.getElementById('annualTrendChart').getContext('2d');
+            if (charts.trend) charts.trend.destroy();
+            charts.trend = new Chart(ctx4, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'ยอดเงินคงเหลือ',
+                        data: [876007.17, 832422.22, 850522.21, 849945.88, 839516.82, 830476.50, 828212.79, 826571.18, 824316.63, t.netBalance, null, null],
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshAllUI();
+        });
+    </script>
+</body>
+</html>
