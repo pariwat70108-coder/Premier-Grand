@@ -1,0 +1,787 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Control Module Packing</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800;900&display=swap');
+        body { 
+            font-family: 'Sarabun', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f0f7ff 0%, #dbeafe 35%, #cbd5e1 70%, #94a3b8 100%);
+        }
+        .glass-panel {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.78) 0%, rgba(241, 245, 249, 0.58) 100%);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1.5px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12), inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+        }
+        .glass-card-active {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(255, 255, 255, 0.88) 100%);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 2.5px solid rgba(5, 150, 105, 0.8);
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2), inset 0 1px 2px rgba(255, 255, 255, 1);
+        }
+        .glass-yellow-card {
+            background: linear-gradient(135deg, rgba(253, 224, 71, 0.92) 0%, rgba(250, 204, 21, 0.85) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 12px 28px rgba(202, 138, 4, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+        }
+        .glass-dark-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(203, 213, 225, 0.45);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+        }
+        .glass-red-banner {
+            background: linear-gradient(90deg, rgba(254, 226, 226, 0.92) 0%, rgba(254, 202, 202, 0.82) 45%, rgba(241, 245, 249, 0.88) 100%);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 2px solid rgba(239, 68, 68, 0.55);
+            box-shadow: 0 10px 30px rgba(220, 38, 38, 0.14), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+        }
+        .hmi-container {
+            width: 1920px;
+            height: 1080px;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        /* Custom Scrollbar for History Table */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: rgba(226, 232, 240, 0.5); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex items-center justify-center p-0 m-0 overflow-hidden relative">
+
+    <!-- AMBIENT INDUSTRIAL BLUE & SILVER LIGHT ORBS -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div class="absolute -top-32 -left-24 w-[700px] h-[700px] rounded-full bg-sky-400/25 blur-[140px]"></div>
+        <div class="absolute top-1/4 right-[-120px] w-[650px] h-[650px] rounded-full bg-blue-500/20 blur-[150px]"></div>
+        <div class="absolute -bottom-40 left-1/3 w-[750px] h-[550px] rounded-full bg-white/50 blur-[140px]"></div>
+    </div>
+
+    <!-- MAIN HMI CONTAINER -->
+    <div class="hmi-container flex flex-col justify-between p-6 relative z-10">
+        
+        <!-- TOP HEADER -->
+        <header class="glass-panel border-b-4 border-b-sky-600 p-5 rounded-2xl flex justify-between items-center mb-3 shadow-lg">
+            <div>
+                <h1 class="text-4xl font-extrabold tracking-wide text-slate-900 drop-shadow-sm">Monitor Control Module Packing</h1>
+                <p class="text-lg text--700 font-bold  mt-1">Toyota Motor Thailand : Parts Shop Samrong</p>
+            </div>
+            
+            <!-- RIGHT HEADER: HISTORY BUTTON, DATE, TIME & LINE BADGE -->
+            <div class="flex items-center gap-4">
+                <!-- History & Daily Summary Trigger Button -->
+                <button onclick="openHistoryModal()" class="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl p-3 px-5 flex items-center gap-3 shadow-md transition transform active:scale-95 cursor-pointer border border-slate-700">
+                    <i class="fa-solid fa-clipboard-list text-amber-400 text-2xl"></i>
+                    <div class="text-left">
+                        <div class="text-xs text-slate-300 font-bold uppercase tracking-wider"></div>
+                        <div class="text-xl font-black text-white flex items-center gap-2">
+                            <span>ประวัติการ Packing</span>
+                            <span id="header-today-count" class="bg-emerald-500 text-slate-950 text-sm font-black px-2.5 py-0.5 rounded-full">0</span>
+                        </div>
+                    </div>
+                </button>
+
+                <div class="bg-white/80 backdrop-blur-md border border-slate-300/90 rounded-2xl p-3 px-5 flex items-center gap-3 shadow-sm">
+                    <i class="fa-regular fa-calendar-days text-sky-600 text-2xl"></i>
+                    <span id="realtime-date" class="text-2xl font-black text-slate-800 tracking-wider">--/--/----</span>
+                </div>
+                <div class="bg-white/80 backdrop-blur-md border border-slate-300/90 rounded-2xl p-3 px-5 flex items-center gap-3 shadow-sm">
+                    <i class="fa-regular fa-clock text-sky-600 text-2xl animate-pulse"></i>
+                    <span id="realtime-clock" class="text-2xl font-mono font-black text-slate-800 tracking-widest">00:00:00</span>
+                </div>
+                <div class="text-xl font-extrabold text-emerald-800 bg-emerald-100/90 backdrop-blur-md border border-emerald-400/70 px-4 py-3 rounded-2xl shadow-sm">
+                    Packing Fr.Axle
+                </div>
+            </div>
+        </header>
+
+        <div class="w-full flex-grow flex flex-col justify-between space-y-4 my-auto">
+            
+            <!-- TOP STATUS CARDS GRID -->
+            <div class="grid grid-cols-3 gap-6">
+                <div id="modelCard-1" onclick="selectActiveModel(1, '4×4', 'Drive System')" class="model-status-card glass-card-active rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden cursor-pointer transition duration-300 hover:scale-[1.02]">
+                    <div class="flex items-center justify-between text-emerald-700 mb-2">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-dharmachakra text-2xl"></i>
+                            <span id="label-1" class="text-base font-extrabold tracking-wider uppercase"></span>
+                        </div>
+                        <span id="dot-1" class="w-4 h-4 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_#10b981]"></span>
+                    </div>
+                    <div class="flex items-baseline justify-between my-2">
+                        <span id="value-1" class="text-5xl font-black font-mono text-emerald-700 drop-shadow-sm">4×4</span>
+                        <i class="fa-solid fa-truck-pickup text-slate-400/60 text-5xl"></i>
+                    </div>
+                    <div class="mt-2 text-sm text-slate-600 border-t border-slate-300/80 pt-3 flex justify-between font-bold">
+                        <span id="subtext-1">Current</span>
+                        <span id="status-1" class="text-emerald-700 text-base font-black">Now Packing</span>
+                    </div>
+                </div>
+
+                <div id="modelCard-2" onclick="selectActiveModel(2, '4×2', 'Drive System')" class="model-status-card glass-panel hover:border-sky-500/80 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden cursor-pointer transition duration-300 hover:scale-[1.02]">
+                    <div class="flex items-center justify-between text-sky-700 mb-2">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-dharmachakra text-2xl"></i>
+                            <span id="label-2" class="text-base font-extrabold tracking-wider uppercase">MODEL</span>
+                        </div>
+                        <span id="dot-2" class="w-4 h-4 rounded-full bg-slate-400"></span>
+                    </div>
+                    <div class="flex items-baseline justify-between my-2">
+                        <span id="value-2" class="text-5xl font-black font-mono text-sky-700 drop-shadow-sm">4×2</span>
+                        <i class="fa-solid fa-truck-pickup text-slate-400/60 text-5xl"></i>
+                    </div>
+                    <div class="mt-2 text-sm text-slate-600 border-t border-slate-300/80 pt-3 flex justify-between font-bold">
+                        <span id="subtext-2">Current</span>
+                        <span id="status-2" class="text-slate-600 text-base">Select</span>
+                    </div>
+                </div>
+
+                <div id="modelCard-3" onclick="selectActiveModel(3, '581D', '4×4 Variant 581D')" class="model-status-card glass-panel hover:border-sky-500/80 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden cursor-pointer transition duration-300 hover:scale-[1.02]">
+                    <div class="flex items-center justify-between text-indigo-700 mb-2">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-solid fa-microchip text-2xl"></i>
+                            <span id="label-3" class="text-base font-extrabold tracking-wider uppercase">581D SPEC</span>
+                        </div>
+                        <span id="dot-3" class="w-4 h-4 rounded-full bg-slate-400"></span>
+                    </div>
+                    <div class="flex items-baseline justify-between my-2">
+                        <span id="value-3" class="text-5xl font-black font-mono text-indigo-700 drop-shadow-sm">4×4</span>
+                        <i class="fa-solid fa-truck-pickup text-slate-400/60 text-5xl"></i>
+                    </div>
+                    <div class="mt-2 text-sm text-slate-600 border-t border-slate-300/80 pt-3 flex justify-between font-bold">
+                        <span id="subtext-3">581D</span>
+                        <span id="status-3" class="text-slate-600 text-base">Select</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION HEADER -->
+            <div class="flex justify-between items-center border-b border-slate-400/50 pb-2 pt-2">
+                <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3 drop-shadow-sm">
+                    <i class="fa-solid fa-globe text-sky-600 text-4xl"></i> Please Select Module (กรุณาเลือกลัง Module)
+                </h2>
+                <div class="flex items-center gap-3">
+                    <span id="activeModuleBadge" class="text-sm font-black text-emerald-800 bg-emerald-100/90 px-4 py-1.5 rounded-full border border-emerald-400 shadow-sm">
+                       
+                    </span>
+                    <span class="text-sm font-bold text-sky-800 bg-white/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-sky-300 shadow-sm">
+                        Tap card to view Key Point image
+                    </span>
+                </div>
+            </div>
+
+            <!-- MODULE CARDS CONTAINER -->
+            <div id="moduleCardsContainer" class="grid grid-cols-4 gap-6 flex-grow items-stretch"></div>
+
+            <!-- QUALITY ALERT TORQUE BANNER -->
+            <div class="w-full glass-red-banner rounded-3xl p-5 flex items-center justify-between relative overflow-hidden gap-6 shadow-md">
+                <div class="flex items-center space-x-5">
+                    <div class="w-16 h-16 rounded-full bg-red-100 backdrop-blur-md border border-red-300 flex items-center justify-center shrink-0 text-red-600 text-3xl shadow-sm">
+                        <i class="fa-solid fa-screwdriver-wrench animate-pulse"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-3">
+                            <span class="bg-red-600 text-white text-sm font-black px-3 py-1 rounded-lg uppercase tracking-wider shadow-sm">QUALITY ALERT</span>
+                            <span class="text-slate-900 font-black text-2xl drop-shadow-sm">อย่าลืม Confirm Torque ลัง Module นะครับ</span>
+                        </div>
+                        <p class="text-sm text-slate-700 mt-1 font-semibold">
+                            ระบบจะบันทึกยอดการ Packing ของโมดูล <strong id="bannerModuleText" class="text-red-700 underline">CAMBODIA (M919)</strong> เมื่อกดปุ่ม Confirm
+                        </p>
+                    </div>
+                </div>
+                <button onclick="confirmTorqueAction()" class="bg-red-600 hover:bg-red-700 backdrop-blur-md text-white font-black text-xl px-8 py-4 rounded-2xl shadow-lg hover:shadow-red-600/30 transition duration-200 transform active:scale-95 flex items-center justify-center space-x-3 shrink-0 cursor-pointer border border-red-500">
+                    <i class="fa-solid fa-check-double text-2xl"></i>
+                    <span>Confirm Torque OK</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="text-center text-sm text-slate-600 font-bold py-1 border-t border-slate-400/40">
+            Created By: Mr.Pariwat Sawangwong
+        </footer>
+    </div>
+
+    <!-- MODAL POPUP 1: KEY POINT IMAGE -->
+    <div id="imageModal" class="fixed inset-0 bg-slate-900/55 backdrop-blur-xl hidden justify-center items-center z-50 p-6">
+        <div class="bg-gradient-to-b from-white/95 to-slate-100/95 backdrop-blur-2xl border-2 border-sky-500/50 text-slate-900 w-[96vw] max-w-[1850px] rounded-3xl p-6 relative shadow-[0_20px_60px_rgba(15,23,42,0.25)] flex flex-col h-[92vh]">
+            
+            <div class="flex justify-between items-center mb-4 border-b border-slate-300 pb-4">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-sky-600 text-white px-4 py-2 rounded-xl font-black text-xl shadow-sm">
+                        <i class="fa-solid fa-shield-halved mr-2"></i> KEY POINT
+                    </div>
+                    <h3 id="modalTitle" class="text-4xl font-black text-sky-800 tracking-wide drop-shadow-sm">Key Point Detail</h3>
+                </div>
+                <button onclick="closeModal()" class="bg-red-600 hover:bg-red-700 text-white font-black text-xl px-8 py-3 rounded-2xl transition duration-200 cursor-pointer border border-red-500 shadow-md flex items-center gap-3">
+                    <i class="fa-solid fa-xmark text-2xl"></i> Close
+                </button>
+            </div>
+
+            <div class="bg-slate-200/70 backdrop-blur-md p-5 rounded-2xl flex justify-center items-center overflow-hidden flex-grow border border-slate-300 relative shadow-inner">
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-sky-700 px-4 py-1.5 rounded-lg border border-sky-300 text-sm font-bold flex items-center gap-2 shadow-sm">
+                    <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>Now Packing
+                </div>
+                <img id="modalImage" src="" alt="Key Point Image" class="max-h-[76vh] max-w-full w-auto h-auto rounded-xl shadow-lg object-contain border border-slate-300 bg-white">
+            </div>
+            
+            <div class="mt-3 flex justify-between items-center text-slate-700 text-sm font-bold px-2">
+                <span>กรุณาตรวจสอบตำแหน่ง Jig และรหัส Kanban ให้ถูกต้องทุกครั้งก่อนเริ่มกระบวนการ Packing</span>
+                <span class="text-sky-700 font-extrabold">(หยุด เรียก คอย ทุกครั้งเมื่อพบสิ่งผิดปกติ)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP 2: PACKING HISTORY & DAILY SUMMARY -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xl hidden justify-center items-center z-50 p-6">
+        <div class="bg-gradient-to-b from-white/95 to-slate-100/95 backdrop-blur-2xl border-2 border-slate-400/60 text-slate-900 w-[95vw] max-w-[1750px] rounded-3xl p-6 relative shadow-[0_20px_60px_rgba(15,23,42,0.3)] flex flex-col h-[90vh]">
+            
+            <!-- MODAL HEADER -->
+            <div class="flex justify-between items-center mb-4 border-b border-slate-300 pb-4">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-slate-900 text-amber-400 px-4 py-2 rounded-xl font-black text-xl shadow-sm">
+                        <i class="fa-solid fa-chart-column mr-2"></i> PACKING LOG
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-black text-slate-900">ตารางสรุปประวัติการ Packing</h3>
+                        <p class="text-sm text-slate-600 font-bold">ข้อมูลจัดเก็บใน Storage อัตโนมัติ (Fr.Axle Packing Line)</p>
+                    </div>
+                </div>
+
+                <!-- CONTROLS: DATE FILTER, EXPORT CSV, CLEAR, CLOSE -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center bg-white border border-slate-300 rounded-xl px-3 py-2 shadow-sm">
+                        <span class="text-sm font-bold text-slate-600 mr-2">วันที่:</span>
+                        <input type="date" id="historyDateFilter" onchange="renderHistoryView()" class="font-bold text-slate-800 outline-none cursor-pointer">
+                    </div>
+
+                    <button onclick="exportHistoryCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base px-5 py-3 rounded-xl transition cursor-pointer shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-file-csv text-xl"></i> Export to Excel
+                    </button>
+
+                    <button onclick="clearHistoryData()" class="bg-slate-200 hover:bg-red-100 text-slate-700 hover:text-red-700 font-bold text-base px-4 py-3 rounded-xl transition cursor-pointer border border-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-trash-can"></i> ล้างประวัติ
+                    </button>
+
+                    <button onclick="closeHistoryModal()" class="bg-red-600 hover:bg-red-700 text-white font-black text-lg px-6 py-3 rounded-xl transition cursor-pointer shadow-md flex items-center gap-2 ml-2">
+                        <i class="fa-solid fa-xmark text-xl"></i> Close
+                    </button>
+                </div>
+            </div>
+
+            <!-- DAILY SUMMARY CARDS -->
+            <div class="mb-4">
+                <div class="text-sm font-extrabold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked text-sky-600"></i> สรุปยอดที่แพ็คสำเร็จ (แยกตาม Module)
+                </div>
+                <div id="dailySummaryGrid" class="grid grid-cols-6 gap-4">
+                    <!-- Dynamic summary cards injected here -->
+                </div>
+            </div>
+
+            <!-- HISTORY LOG TABLE -->
+            <div class="flex-grow bg-white rounded-2xl border border-slate-300 overflow-hidden flex flex-col shadow-inner">
+                <div class="overflow-y-auto flex-grow">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-900 text-white sticky top-0 z-10">
+                            <tr>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider w-20">#</th>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider">วันที่ (Date)</th>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider">เวลา (Time)</th>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider">Model</th>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider">Module Name</th>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider">Kanban / ID</th>
+                                <th class="py-3.5 px-5 text-sm font-extrabold uppercase tracking-wider text-center">สถานะ Torque</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-slate-200 text-slate-800 font-bold text-base">
+                            <!-- Dynamic rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 right-10 bg-emerald-600 text-white font-black text-xl px-8 py-4 rounded-2xl shadow-xl hidden z-50 transition transform border border-emerald-400">
+        Notification
+    </div>
+
+    <script>
+        // Storage Key
+        const STORAGE_KEY = 'tmt_samrong_packing_logs_v1';
+
+        // Current Active State
+        let currentState = {
+            modelId: 1,
+            modelName: '4×4',
+            moduleKey: 'box1',
+            moduleName: 'CAMBODIA',
+            moduleCode: 'M919'
+        };
+
+        // Date & Time Clock
+        function updateDateTime() {
+            const now = new Date();
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Bangkok' };
+            document.getElementById('realtime-date').innerText = now.toLocaleDateString('th-TH', options);
+            document.getElementById('realtime-clock').innerText = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Helper: Get Local YYYY-MM-DD
+        function getTodayISO() {
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            return new Date(now.getTime() - offset).toISOString().split('T')[0];
+        }
+
+        // Key Points Master Data (with Code & Module Name for Logging)
+        const keyPoints = {
+            myanmar: { title: "MODULE MYANMAR", name: "Myanmar", code: "V967", imageSrc: "Myanmar967.png" },
+            cambodia: { title: "MODULE CAMBODIA", name: "Cambodia", code: "V968", imageSrc: "Cambodia.png" },
+            india: { title: "MODULE INDIA", name: "India", code: "V969", imageSrc: "India.png" },
+            box1: { title: "MODULE CAMBODIA", name: "CAMBODIA", code: "M919", imageSrc: "CambodiaOld.png" },
+            box2: { title: "MODULE 1HT", name: "1HT", code: "H002", imageSrc: "1HT4X4.png" },
+            box3: { title: "MODULE MSP", name: "MSP", code: "M819", imageSrc: "Msp4x4.png" },
+            box4: { title: "MODULE BQ", name: "BQ", code: "V047", imageSrc: "BQ4x4.png" },
+            m2_box1: { title: "MODULE 1HT", name: "1HT", code: "H002", imageSrc: "1HT4x2.png" },
+            m2_box2: { title: "MODULE MSP", name: "MSP", code: "M819", imageSrc: "Msp4x2.png" },
+            m2_box3: { title: "MODULE BQ", name: "BQ", code: "V047", imageSrc: "BQ4x2.png" }
+        };
+
+        // Update Active Module Indicator on Main UI
+        function setActiveModule(key) {
+            if (!keyPoints[key]) return;
+            currentState.moduleKey = key;
+            currentState.moduleName = keyPoints[key].name;
+            currentState.moduleCode = keyPoints[key].code;
+
+            const label = `${currentState.moduleName} (${currentState.moduleCode})`;
+            document.getElementById('activeModuleBadge').innerText = `Selected: ${label}`;
+            document.getElementById('bannerModuleText').innerText = label;
+        }
+
+        // Render Module Cards by Model
+        function renderModuleCards(modelId) {
+            const container = document.getElementById('moduleCardsContainer');
+            
+            if (modelId === 1) {
+                setActiveModule('box1');
+                container.className = "grid grid-cols-4 gap-6 flex-grow items-stretch";
+                container.innerHTML = `
+                    <div onclick="openModal('box1')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-slate-900 text-amber-400 text-base font-extrabold px-4 py-1.5 rounded-xl border border-amber-500/30">ลังเหลือง</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-3 py-1 rounded-lg border border-amber-400/40">ID: M919</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-5xl font-black tracking-tight text-blue-950 leading-none">CAMBODIA</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">M919</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('box2')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-slate-900 text-amber-400 text-base font-extrabold px-4 py-1.5 rounded-xl border border-amber-500/30">ลังเหลือง</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-3 py-1 rounded-lg border border-amber-400/40">ID: H002</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight text-blue-950 leading-none">1HT</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">H002</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('box3')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-slate-900 text-amber-400 text-base font-extrabold px-4 py-1.5 rounded-xl border border-amber-500/30">ลังเหลือง</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-3 py-1 rounded-lg border border-amber-400/40">ID: M819</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight text-blue-950 leading-none">MSP</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">M819</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('box4')" class="glass-dark-card text-white rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-slate-800 text-white text-base font-extrabold px-4 py-1.5 rounded-xl border border-slate-600">ลังดำ</span>
+                            <span class="bg-slate-700 text-slate-200 text-base font-extrabold px-3 py-1 rounded-lg">ID: V047</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight text-slate-900 bg-white px-5 py-1 rounded-xl inline-block leading-none shadow">BQ</h2>
+                            <p class="text-base font-black text-slate-300 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-950 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">V047</span>
+                        </div>
+                    </div>
+                `;
+            } else if (modelId === 2) {
+                setActiveModule('m2_box1');
+                container.className = "grid grid-cols-3 gap-6 flex-grow items-stretch";
+                container.innerHTML = `
+                    <div onclick="openModal('m2_box1')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-slate-900 text-sky-400 text-base font-extrabold px-5 py-1.5 rounded-xl">ลังเหลือง</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-4 py-1 rounded-lg">ID: H002</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight text-blue-950 leading-none">1HT</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">H002</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('m2_box2')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-slate-900 text-sky-400 text-base font-extrabold px-5 py-1.5 rounded-xl">ลังเหลือง</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-4 py-1 rounded-lg">ID: M819</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight text-blue-950 leading-none">MSP</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">M819</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('m2_box3')" class="glass-dark-card text-white rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-slate-800 text-white text-base font-extrabold px-5 py-1.5 rounded-xl border border-slate-600">ลังดำ</span>
+                            <span class="bg-slate-700 text-slate-200 text-base font-extrabold px-4 py-1 rounded-lg">ID: V047</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight text-slate-900 bg-white px-5 py-1 rounded-xl inline-block leading-none shadow">BQ</h2>
+                            <p class="text-base font-black text-slate-300 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-950 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">KANBAN CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">V047</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                setActiveModule('myanmar');
+                container.className = "grid grid-cols-3 gap-6 flex-grow items-stretch";
+                container.innerHTML = `
+                    <div onclick="openModal('myanmar')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-slate-900 text-white text-lg font-extrabold px-5 py-1.5 rounded-xl">พม่า</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-4 py-1 rounded-lg">ID: V967</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight leading-none">Myanmar</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">MODULE CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">V967</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('cambodia')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-slate-900 text-white text-lg font-extrabold px-5 py-1.5 rounded-xl">กัมพูชา</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-4 py-1 rounded-lg">ID: V968</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight leading-none">Cambodia</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">MODULE CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">V968</span>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('india')" class="glass-yellow-card text-slate-900 rounded-3xl p-6 cursor-pointer hover:scale-[1.03] transition duration-300 transform flex flex-col justify-between relative shadow-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-slate-900 text-white text-lg font-extrabold px-5 py-1.5 rounded-xl">อินเดีย</span>
+                            <span class="bg-white/80 text-slate-900 text-base font-extrabold px-4 py-1 rounded-lg">ID: V969</span>
+                        </div>
+                        <div class="my-4">
+                            <h2 class="text-6xl font-black tracking-tight leading-none">India</h2>
+                            <p class="text-base font-black text-slate-900 tracking-wider uppercase mt-3">Key Point Detail</p>
+                        </div>
+                        <div class="bg-slate-900 text-white rounded-2xl p-4 flex justify-between items-center mt-2 border border-slate-800">
+                            <span class="text-sm font-bold tracking-wider text-slate-400">MODULE CODE</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono">V969</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // LocalStorage Functions
+        function getPackingLogs() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function savePackingLog(record) {
+            const logs = getPackingLogs();
+            logs.unshift(record); // Newest first
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+            updateHeaderCounter();
+        }
+
+        function updateHeaderCounter() {
+            const logs = getPackingLogs();
+            const todayISO = getTodayISO();
+            const todayCount = logs.filter(item => item.dateISO === todayISO).length;
+            document.getElementById('header-today-count').innerText = todayCount;
+        }
+
+        // Confirm Torque & Record to LocalStorage
+        function confirmTorqueAction() {
+            const now = new Date();
+            const dateISO = getTodayISO();
+            const dateDisplay = now.toLocaleDateString('th-TH', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const timeDisplay = now.toTimeString().split(' ')[0];
+
+            const record = {
+                id: Date.now(),
+                dateISO: dateISO,
+                date: dateDisplay,
+                time: timeDisplay,
+                model: currentState.modelName,
+                moduleName: currentState.moduleName,
+                moduleCode: currentState.moduleCode,
+                status: 'OK'
+            };
+
+            savePackingLog(record);
+            showToast(`บันทึกสำเร็จ: ${record.model} - ${record.moduleName} (${record.moduleCode})`);
+        }
+
+        // Open Key Point Modal & Set Active Module for Logging
+        function openModal(key) {
+            setActiveModule(key);
+            const modal = document.getElementById('imageModal');
+            const title = document.getElementById('modalTitle');
+            const imgElement = document.getElementById('modalImage');
+
+            if (keyPoints[key]) {
+                title.innerText = keyPoints[key].title;
+                imgElement.src = keyPoints[key].imageSrc;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        // History Modal Controls
+        function openHistoryModal() {
+            const dateInput = document.getElementById('historyDateFilter');
+            if (!dateInput.value) {
+                dateInput.value = getTodayISO();
+            }
+            renderHistoryView();
+            const modal = document.getElementById('historyModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function renderHistoryView() {
+            const logs = getPackingLogs();
+            const selectedDate = document.getElementById('historyDateFilter').value;
+            
+            const filteredLogs = selectedDate 
+                ? logs.filter(item => item.dateISO === selectedDate)
+                : logs;
+
+            // 1. Build Daily Summary Grouping
+            const summaryMap = {};
+            filteredLogs.forEach(item => {
+                const groupKey = `${item.moduleName} (${item.moduleCode})`;
+                if (!summaryMap[groupKey]) {
+                    summaryMap[groupKey] = {
+                        name: item.moduleName,
+                        code: item.moduleCode,
+                        count: 0
+                    };
+                }
+                summaryMap[groupKey].count += 1;
+            });
+
+            const summaryGrid = document.getElementById('dailySummaryGrid');
+            const summaryEntries = Object.values(summaryMap);
+
+            let summaryHTML = `
+                <div class="bg-slate-900 text-white rounded-2xl p-4 border border-slate-700 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">TOTAL PACKED</span>
+                    <div class="text-4xl font-black font-mono mt-1">${filteredLogs.length} <span class="text-sm font-normal text-slate-300">ลัง</span></div>
+                </div>
+            `;
+
+            summaryEntries.forEach(entry => {
+                summaryHTML += `
+                    <div class="bg-white rounded-2xl p-4 border-2 border-sky-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-black text-slate-800">${entry.name}</span>
+                            <span class="text-xs font-mono font-bold bg-sky-100 text-sky-800 px-2 py-0.5 rounded">${entry.code}</span>
+                        </div>
+                        <div class="text-3xl font-black font-mono text-sky-700 mt-1">${entry.count} <span class="text-sm font-bold text-slate-500">ลัง</span></div>
+                    </div>
+                `;
+            });
+
+            summaryGrid.innerHTML = summaryHTML;
+
+            // 2. Render History Table Rows
+            const tbody = document.getElementById('historyTableBody');
+            if (filteredLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-12 text-center text-slate-400 text-xl font-bold">
+                            <i class="fa-regular fa-folder-open text-4xl mb-2 block"></i>
+                            ยังไม่มีข้อมูลการบันทึก Packing ในวันที่เลือก
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredLogs.map((row, index) => `
+                <tr class="hover:bg-sky-50/70 transition">
+                    <td class="py-3.5 px-5 font-mono text-slate-500">${filteredLogs.length - index}</td>
+                    <td class="py-3.5 px-5">${row.date}</td>
+                    <td class="py-3.5 px-5 font-mono text-sky-700">${row.time}</td>
+                    <td class="py-3.5 px-5"><span class="bg-slate-200 text-slate-800 px-3 py-1 rounded-lg text-sm font-black">${row.model}</span></td>
+                    <td class="py-3.5 px-5 text-slate-900 font-black">${row.moduleName}</td>
+                    <td class="py-3.5 px-5 font-mono text-amber-700 font-black">${row.moduleCode}</td>
+                    <td class="py-3.5 px-5 text-center">
+                        <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-1 rounded-full text-sm font-black">
+                            <i class="fa-solid fa-circle-check mr-1"></i> ${row.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Export CSV for Excel / Power BI
+        function exportHistoryCSV() {
+            const logs = getPackingLogs();
+            if (logs.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับ Export');
+                return;
+            }
+
+            const headers = ['No,Date,Time,Model,Module_Name,Kanban_Code,Torque_Status'];
+            const rows = logs.map((r, i) => 
+                `${logs.length - i},"${r.date}","${r.time}","${r.model}","${r.moduleName}","${r.moduleCode}","${r.status}"`
+            );
+
+            const csvContent = "\uFEFF" + headers.concat(rows).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Packing_Log_FrAxle_${getTodayISO()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('ดาวน์โหลดไฟล์ Excel เรียบร้อยแล้ว');
+        }
+
+        function clearHistoryData() {
+            if (confirm('ยืนยันการล้างข้อมูลประวัติการ Packing ทั้งหมดออกจากเครื่องนี้ใช่หรือไม่?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                updateHeaderCounter();
+                renderHistoryView();
+                showToast('ล้างข้อมูลประวัติเรียบร้อยแล้ว');
+            }
+        }
+
+        // Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 2500);
+        }
+
+        // Select Active Drive Model
+        function selectActiveModel(cardId, modelName, subDesc) {
+            currentState.modelId = cardId;
+            currentState.modelName = modelName;
+
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`modelCard-${i}`);
+                const statusSpan = document.getElementById(`status-${i}`);
+                const dotSpan = document.getElementById(`dot-${i}`);
+                const labelSpan = document.getElementById(`label-${i}`);
+
+                if (i === cardId) {
+                    card.className = "model-status-card glass-card-active rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden cursor-pointer transition duration-300 hover:scale-[1.02]";
+                    statusSpan.innerText = "Now Packing";
+                    statusSpan.className = "text-emerald-700 text-base font-black";
+                    dotSpan.className = "w-6 h-6 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_#10b981]";
+                    labelSpan.innerText = "Model";
+                } else {
+                    card.className = "model-status-card glass-panel hover:border-sky-500/80 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden cursor-pointer transition duration-300 hover:scale-[1.02]";
+                    statusSpan.innerText = i === 3 ? "Ready" : "Select";
+                    statusSpan.className = "text-slate-600 text-base";
+                    dotSpan.className = "w-4 h-4 rounded-full bg-slate-400";
+                    labelSpan.innerText = i === 3 ? "581D SPEC" : "MODEL";
+                }
+            }
+            renderModuleCards(cardId);
+            showToast(`สลับไปที่โหมด: ${modelName} (${subDesc})`);
+        }
+
+        // Initialize on Load
+        renderModuleCards(1);
+        updateHeaderCounter();
+    </script>
+</body>
+</html>
